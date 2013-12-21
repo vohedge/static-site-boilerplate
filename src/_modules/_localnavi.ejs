@@ -1,0 +1,85 @@
+<%
+/*
+ * Local Navi
+ */
+
+// 2階層目以降を表示
+var level = 2;
+currentContentTree = getCurrentContentTree( level );
+currentDir = getCurrentRootPath( level );
+
+function showContentrTree( contentTree, baseUrl ) {
+	var _data = contentTree._data;
+	var url = '';
+	%><ul><%
+	for ( var pageSlug in _data ) {
+		// Page
+		if ( typeof contentTree[pageSlug] == 'undefined' ) {
+			if ( pageSlug != 'index' ) {
+				url = baseUrl + currentDir.join( '/' ) + '/' + pageSlug + '.html';
+				%><li class="<%- isCurrentPage( pageSlug ) ? 'is-current' : '' %> mod-nav-item">
+				<span><a class="mod-nav-item-link" href="<%- url %>"><%- _data[pageSlug].title %></a></span></li><%
+			}
+		// Folder
+		} else {
+			currentDir.push( pageSlug );
+			url = currentDir.join( '/' );
+			%><li class="<%- ( isCurrentDirectory( pageSlug ) ) ? 'is-current' : '' %> mod-nav-item">
+				<span><a class="mod-nav-item-link" href="<%- baseUrl %><%- url %>/"><%- _data[pageSlug].title %></a></span><%
+				showContentrTree( contentTree[pageSlug], baseUrl );
+				currentDir.pop();
+			%></li><%
+		}
+	}
+	%></ul><%
+}
+
+function getCurrentRootPath( level ) {
+	level--;
+	var current_path = [];
+	for ( var i = 0; i < level; i++ ) {
+		if ( typeof current.path[i] != 'undefined' )
+			current_path.push( current.path[i] );
+		else
+			return false;
+	}
+	return current_path;
+}
+
+function getCurrentContentTree( level ) {
+	level--;
+	var directories = [];
+	for ( i = 0; i < level; i++ ) {
+		if ( typeof current.path[i] != 'undefined' )
+			directories.push( current.path[i] );
+		else
+			return false;
+	}
+	return getContentTree( directories );
+}
+
+function getContentTree( directories ) {
+	var contentTree = public;
+	var dir;
+	for ( var directory in directories ) {
+		dir = directories[directory];
+		if ( typeof contentTree[dir] != 'undefined' )
+			contentTree = contentTree[dir];
+		else	
+			return false;
+	}
+	return contentTree;
+}
+
+function isCurrentPage( pageSlug ) {
+	return currentDir.toString() + ',' + pageSlug == current.path.toString()
+}
+
+function isCurrentDirectory( pageSlug ) {
+	return currentDir.toString() + ',index' == current.path.toString()
+}
+
+%>
+<div class="mod-nav mod-nav--global">
+<% showContentrTree( currentContentTree, '/' ); %>
+</div>

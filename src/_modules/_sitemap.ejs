@@ -1,0 +1,44 @@
+<%
+/*
+ * Site map template
+ */
+
+/* Save directories */
+currentDir = [];
+
+function showContentrTree( contentTree, baseUrl ) {
+	var _data = contentTree._data;
+	var url = '';
+	%><ul><%
+	for ( var pageSlug in _data ) {
+		// Page
+		if ( typeof contentTree[pageSlug] == 'undefined' ) {
+			if ( pageSlug != 'index' ) {
+				url = baseUrl + currentDir.join( '/' ) + '/' + pageSlug + '.html';
+				%><li class="<%- isCurrentPage( pageSlug ) ? 'is-current' : '' %>"><span><a href="<%- url %>"><%- _data[pageSlug].title %></a></span></li><%
+			}
+		// Folder
+		} else {
+			currentDir.push( pageSlug );
+			url = currentDir.join( '/' );
+			%><li class="<%- ( isCurrentDirectory( pageSlug ) ) ? 'is-current' : '' %>"><span><a href="<%- baseUrl %><%- url %>/"><%- _data[pageSlug].title %></a></span><%
+				showContentrTree( contentTree[pageSlug], baseUrl );
+				currentDir.pop();
+			%></li><%
+		}
+	}
+	%></ul><%
+}
+
+function isCurrentPage( pageSlug ) {
+	return currentDir.toString() + ',' + pageSlug == current.path.toString()
+}
+
+function isCurrentDirectory( pageSlug ) {
+	return currentDir.toString() + ',index' == current.path.toString()
+}
+
+%>
+<div class="mod-sitemap">
+<% showContentrTree( public, '/' ); %>
+</div>

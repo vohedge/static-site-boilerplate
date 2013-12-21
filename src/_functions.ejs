@@ -1,0 +1,183 @@
+<%
+/** 
+ * Local Navigation
+ * @param int level Directory level of the top of local navi. 
+ *        1 for the top level, 2 for the 2nd level directory.
+ * @see nav()
+ */
+function localNavi( level, baseUrl ) {
+	if ( typeof level == 'undefined' )
+		level = 0;
+
+	if ( typeof baseUrl == 'undefined' )
+		baseUrl = '/';
+
+	var currentRootPath = getCurrentRootPath( level );
+	var currentContentTree = getCurrentContentTree( level );
+
+	new _nav( currentContentTree, currentRootPath, baseUrl );
+}
+
+/**
+ * Show site map
+ * @see nav()
+ */
+function siteMap() {
+	new _nav();
+}
+
+/**
+ * Get the path to current page
+ *
+ * @param int level 
+ * @return array or false
+ */
+function getCurrentRootPath( level ) {
+	level--;
+	var current_path = [];
+	for ( var i = 0; i < level; i++ ) {
+		if ( typeof current.path[i] != 'undefined' )
+			current_path.push( current.path[i] );
+		else
+			return false;
+	}
+	return current_path;
+}
+
+/**
+ * Get the content tree by the level
+ *
+ * @param int level 
+ * @return array or false
+ */
+function getCurrentContentTree( level ) {
+	level--;
+	var directories = [];
+	for ( i = 0; i < level; i++ ) {
+		if ( typeof current.path[i] != 'undefined' )
+			directories.push( current.path[i] );
+		else
+			return false;
+	}
+	return getContentTree( directories );
+}
+
+/**
+ * Get the content tree
+ */
+function getContentTree( directories ) {
+	var contentTree = public;
+	var dir;
+	for ( var directory in directories ) {
+		dir = directories[directory];
+		if ( typeof contentTree[dir] != 'undefined' )
+			contentTree = contentTree[dir];
+		else	
+			return false;
+	}
+	return contentTree;
+}
+
+/**
+ * Show navigation tree
+ *
+ * @param object contentTree
+ * @param array directories
+ * @param string baseUrl
+ */
+var _nav = function ( contentTree, directories, baseUrl ) {
+	if ( typeof contentTree == 'undefined' )
+		contentTree = public;
+
+	if ( typeof directories == 'undefined' )
+		directories = [];
+
+	if ( typeof baseUrl == 'undefined' )
+		baseUrl = '/';
+
+	this.currentDir = directories.concat();
+	baseUrl = this.normalizeBaseUrl( baseUrl );
+	this.showContentrTree( contentTree, baseUrl );
+}
+_nav.prototype = {
+
+	/**
+	 * Show content tree
+	 *
+	 * @param object contentTree
+	 * @param baseUrl
+	 */
+	showContentrTree: function( contentTree, baseUrl ) {
+		var _data = contentTree._data;
+		var url = '';
+		%><ul><%
+		for ( var pageSlug in _data ) {
+			// Page
+			if ( typeof contentTree[pageSlug] == 'undefined' ) {
+				if ( pageSlug != 'index' ) {
+					url = this.currentDir.join( '/' );
+					url = baseUrl + url + '/' + pageSlug + '.html';
+					%><li class="<%- this.isCurrentPage( pageSlug ) ? 'is-current' : '' %>">
+						<span><a href="<%- url %>"><%- _data[pageSlug].title %></a></span>
+					</li><%
+				}
+			// Folder
+			} else {
+				this.currentDir.push( pageSlug );
+				url = this.currentDir.join( '/' );
+				%><li class="<%- ( this.isCurrentDirectory( pageSlug ) ) ? 'is-current' : '' %>">
+					<span><a href="<%- baseUrl %><%- url %>/"><%- _data[pageSlug].title %></a></span><%
+					this.showContentrTree( contentTree[pageSlug], baseUrl );
+					this.currentDir.pop();
+				%></li><%
+			}
+		}
+		%></ul><%
+	},
+
+	/**
+	 * 
+	 *
+	 * @param object contentTree
+	 * @param baseUrl
+	 */
+	normalizeBaseUrl: function( baseUrl ) {
+		if ( baseUrl.match( /\/$/ ) )
+			return baseUrl;
+		else
+			return baseUrl + '/';
+	},
+	isCurrentPage: function( pageSlug ) {
+		if ( this.currentDir.toString() + ',' + pageSlug == current.path.toString() )
+			return true;
+		else
+			return false;
+	},
+	isCurrentDirectory: function( pageSlug ) {
+		if ( this.currentDir.toString() + ',index' == current.path.toString() )
+			return true;
+		else
+			return false;
+	}
+}
+
+/**
+ * var_dump like php for object
+ *
+ * @param object obj
+ */
+function var_dump( obj ) {
+	echo( JSON.stringify( obj ) + '<br />' );
+}
+
+/**
+ * Show string variable
+ *
+ * @param string str
+ */
+function echo( str ) {
+	%><%- str %><%
+}
+
+%>
+
